@@ -1,0 +1,12 @@
+{
+  "name": "repos-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "c8 --reporter=text --reporter=lcov node --test test/*.test.js",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "c8": "^10.1.3"
+  }
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "REP-001",
+    "nombre": "neo-portal-web",
+    "descripcion": "Interfaz de demostración para consultar servicios y operaciones.",
+    "lenguaje": "TypeScript",
+    "rama": "main",
+    "estado": "Activo",
+    "estrellas": 18,
+    "actualizado": "2026-10-26"
+  },
+  {
+    "id": "REP-002",
+    "nombre": "neo-repos-api",
+    "descripcion": "API de ejemplo que entrega el catálogo de repositorios del reto.",
+    "lenguaje": "JavaScript",
+    "rama": "main",
+    "estado": "Activo",
+    "estrellas": 12,
+    "actualizado": "2026-10-24"
+  },
+  {
+    "id": "REP-003",
+    "nombre": "infra-kubernetes-demo",
+    "descripcion": "Manifiestos de infraestructura local para prácticas de despliegue.",
+    "lenguaje": "Python",
+    "rama": "develop",
+    "estado": "Activo",
+    "estrellas": 9,
+    "actualizado": "2026-10-22"
+  },
+  {
+    "id": "REP-004",
+    "nombre": "devops-pipeline-lab",
+    "descripcion": "Ejercicios de integración continua, análisis de calidad y build.",
+    "lenguaje": "Java",
+    "rama": "main",
+    "estado": "En progreso",
+    "estrellas": 15,
+    "actualizado": "2026-10-20"
+  },
+  {
+    "id": "REP-005",
+    "nombre": "observability-starter",
+    "descripcion": "Proyecto de muestra para explorar métricas, logs y diagnóstico.",
+    "lenguaje": "Go",
+    "rama": "feature/metrics",
+    "estado": "Activo",
+    "estrellas": 7,
+    "actualizado": "2026-10-18"
+  }
+]
