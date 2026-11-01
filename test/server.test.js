@@ -33,6 +33,28 @@ after(async () => {
 });
 
 describe('API de repositorios', () => {
+  it('responde usando localhost si la solicitud no incluye Host', async () => {
+    const response = await new Promise((resolve, reject) => {
+      const request = server.emit('request', {
+        method: 'GET',
+        url: '/health',
+        headers: {},
+      }, {
+        writeHead(statusCode, headers) {
+          this.statusCode = statusCode;
+          this.headers = headers;
+        },
+        end(body) {
+          resolve({ status: this.statusCode, headers: this.headers, body });
+        },
+      });
+      if (request === false) reject(new Error('Solicitud no procesada'));
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(JSON.parse(response.body), { status: 'ok' });
+  });
+
   it('responde al health check /health', async () => {
     const response = await fetch(`${baseUrl}/health`);
 
@@ -72,3 +94,4 @@ describe('API de repositorios', () => {
     assert.deepEqual(await response.json(), { ok: false, error: 'Ruta no encontrada' });
   });
 });
+
