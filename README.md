@@ -1,70 +1,70 @@
 # repos-api
 
-API HTTP de Node.js que sirve el catálogo de repositorios de ejemplo. El endpoint de datos es `GET /api/repositorios`; las comprobaciones de salud están en `/health` y `/healthz`.
+API HTTP de Node.js para el catálogo de repositorios. Utiliza datos fijos en `data/repositorios.json` y no requiere credenciales de GitHub.
 
-## Requisitos
-
-- Node.js 22 o posterior y npm para pruebas.
-- Docker para construir la imagen.
-- Helm y Minikube para desplegar en Kubernetes.
-
-## Pruebas y cobertura
-
-```bash
-npm ci
-npm test
-```
-
-Genera cobertura de consola y `coverage/lcov.info`.
+| Endpoint | Respuesta |
+| --- | --- |
+| GET /api/repositorios | Objeto con ok, total y la lista data |
+| GET /health | Estado de salud |
+| GET /healthz | Estado de salud |
 
 ## Ejecución local
 
-```bash
+```powershell
 npm start
 ```
 
-La API escucha en `http://localhost:3000` de forma predeterminada. Usa `PORT` para cambiarlo.
+El puerto predeterminado es 3000. La variable `PORT` permite cambiarlo. La imagen Docker ejecuta con el usuario `node`; en Kubernetes, el Service se llama `repos-api` y expone el puerto 3000.
 
-## Docker y Helm
+## Requisitos
 
-```bash
-docker build -t repos-api:1.0 .
-helm lint ./helm
-minikube image build -t repos-api:1.0 .
-helm upgrade --install repos-api ./helm -n reto --create-namespace
+- Node.js >=22.12 y npm.
+- Docker Desktop con contenedores Linux.
+- Minikube, Helm y kubectl.
+
+## Pruebas y cobertura
+
+```powershell
+npm ci --ignore-scripts
+npm run test:coverage
 ```
 
-El Service interno debe llamarse `repos-api` y expone el puerto 3000 para que el frontend lo encuentre.
+El reporte LCOV se genera en `coverage/lcov.info`. Se incluyen todos los archivos JavaScript de la raíz. Los mínimos globales son 90 % para líneas, sentencias y funciones, y 80 % para ramas.
 
-## CI y SonarQube Cloud
+## Integración continua
 
-GitHub Actions ejecuta pruebas, cobertura, análisis y construcción Docker. Configura el secreto `SONAR_TOKEN` en el repositorio. La clave de proyecto se define en `sonar-project.properties`.
+El workflow `.github/workflows/ci.yml` se ejecuta en push y pull request. Instala dependencias desde `package-lock.json`, ejecuta las pruebas, genera cobertura, analiza el proyecto en SonarCloud y comprueba la construcción de la imagen Docker. Las acciones están fijadas por SHA.
 
-## Controles de calidad obligatorios
+Configura `SONAR_TOKEN` como secreto del repositorio. Las claves del proyecto se encuentran en `sonar-project.properties`. El escáner espera el resultado del Quality Gate; un rechazo hace fallar la ejecución. El script PowerShell de despliegue mantiene análisis estático y se valida mediante ejecución en Kubernetes; la cobertura LCOV corresponde a JavaScript.
 
-Ejecuta `npm run test:coverage`. Se mide todo el JavaScript de la raíz con `c8 --all`, incluso los archivos que ninguna prueba importe. La pipeline exige como mínimo 90 % de líneas, sentencias y funciones, y 80 % de ramas en el conjunto del componente. No se excluye el servidor local ni el arranque de la API para mejorar artificialmente el porcentaje.
+## Despliegue en Minikube
 
-Las pruebas de frontend incluyen la página con DOM, filtros, actualización, respuestas inválidas, errores HTTP y de red, y el proxy del servidor local. Las pruebas de backend incluyen los endpoints y el arranque real en un puerto configurado. Los procesos de prueba se detienen de forma controlada para guardar cobertura también en Windows.
+Inicia Docker Desktop y el clúster:
 
-SonarCloud importa LCOV. `sonar.qualitygate.wait=true` obliga a esperar su Quality Gate y falla el análisis si el resultado es rechazado. El mínimo global de cobertura se impone con c8 antes del análisis; este control es independiente de las condiciones del Quality Gate de SonarCloud.
+```powershell
+minikube start --driver=docker --cpus=2 --memory=3072 --profile=devops-reto
+```
 
+Ejecuta primero `./deploy-minikube.ps1` en el repositorio de la API y después en el del frontend. El script construye la imagen con Docker Desktop, la carga en Minikube, comprueba su disponibilidad e instala el chart con Helm. La etiqueta predeterminada es `1.1`; se puede cambiar con `-ImageTag`.
 
-## Sprint 6: despliegue reproducible en Windows
+Los charts utilizan `imagePullPolicy: Never`, recursos de CPU, memoria y almacenamiento efímero, comprobaciones de salud y tokens de ServiceAccount sin montaje automático.
 
-Con Docker Desktop funcionando en modo Linux, instala Minikube y Helm desde sus fuentes oficiales. Inicia una vez el clúster con `minikube start --driver=docker --cpus=2 --memory=3072 --profile=devops-reto`.
+```powershell
+kubectl --context devops-reto -n reto get pods,svc
+helm list --kube-context devops-reto -n reto
+kubectl --context devops-reto -n reto port-forward svc/repos-front 8080:80
+```
 
-Despliega primero el backend y después el frontend. Desde la raíz de cada repositorio ejecuta `./deploy-minikube.ps1`. El script requiere un clúster ya iniciado, construye la imagen con Docker Desktop y la carga dentro del perfil Minikube, comprueba Helm, instala con espera y reversión automática ante errores, y comprueba el despliegue. Se puede cambiar la etiqueta con `-ImageTag 1.1` para una nueva versión.
+Abre `http://localhost:8080` mientras el port-forward permanezca activo.
 
-El script del frontend comprueba que Nginx consulte la API a través del Service interno `repos-api:3000` y reciba los cinco repositorios. Los charts usan imágenes locales con `imagePullPolicy: Never`, límites de CPU y memoria, y comprobaciones de disponibilidad y salud.
+## Diagnóstico
 
-Para ver la aplicación deja activo `kubectl --context devops-reto -n reto port-forward svc/repos-front 8080:80` y abre `http://localhost:8080`. Para obtener evidencias usa `helm list --kube-context devops-reto -n reto` y `kubectl --context devops-reto -n reto get pods,svc`.
+- `ErrImageNeverPull`: comprobar que la etiqueta esté cargada en el perfil `devops-reto`.
+- Error de conexión a la API: comprobar el Service `repos-api:3000`, el namespace y la disponibilidad del pod.
+- Error de certificados al construir dentro de Minikube: construir con Docker Desktop y cargar con `minikube image load --daemon`, manteniendo la validación TLS.
+- Error de permisos en archivos temporales: el script utiliza una carpeta de trabajo bajo `LOCALAPPDATA/DevOpsTools/minikube-temp` y restaura las variables temporales al terminar.
+- Pod sin disponibilidad: revisar `kubectl describe pod`, eventos y logs del deployment.
 
-Si aparece `ErrImageNeverPull`, comprueba el perfil y la etiqueta usada al construir. Si Nginx no encuentra la API, comprueba que el backend esté listo en el mismo namespace. Para investigar usa `kubectl --context devops-reto -n reto get events --sort-by=.lastTimestamp` y los logs del deployment correspondiente.
+## Dependencias de pruebas
 
-
-
-En este equipo, el constructor interno de Minikube encontró errores de certificados al acceder a Docker Hub. Se usa Docker Desktop para construir y minikube image load --daemon para cargar la imagen local, conservando la verificación TLS. El script comprueba que la imagen exista en el clúster antes de instalar con Helm.
-
-## Entrega y defensa
-
-Consulta [la guía de entrega](docs/ENTREGA.md) y [la guía de defensa](docs/DEFENSA.md).
+Las versiones transitivas de `glob` y `minimatch` utilizadas por `test-exclude` se fijan mediante `overrides`. Revisar esos ajustes cuando se actualicen las herramientas de cobertura.
