@@ -1,7 +1,7 @@
 param(
     [string]$Profile = 'devops-reto',
     [string]$Namespace = 'reto',
-    [string]$ImageTag = '1.0'
+    [string]$ImageTag = '1.1'
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest

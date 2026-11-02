@@ -64,3 +64,7 @@ Si aparece `ErrImageNeverPull`, comprueba el perfil y la etiqueta usada al const
 
 
 En este equipo, el constructor interno de Minikube encontró errores de certificados al acceder a Docker Hub. Se usa Docker Desktop para construir y minikube image load --daemon para cargar la imagen local, conservando la verificación TLS. El script comprueba que la imagen exista en el clúster antes de instalar con Helm.
+
+## Entrega y defensa
+
+Consulta [la guía de entrega](docs/ENTREGA.md) y [la guía de defensa](docs/DEFENSA.md).

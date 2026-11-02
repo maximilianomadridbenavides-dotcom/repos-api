@@ -1,8 +1,8 @@
 FROM node:22-alpine
 ENV NODE_ENV=production PORT=3000
 WORKDIR /app
-COPY package.json ./
-RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY app.js server.js ./
 COPY data ./data
 USER node

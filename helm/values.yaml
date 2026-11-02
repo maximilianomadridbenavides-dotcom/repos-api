@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: repos-api
-  tag: "1.0"
+  tag: "1.1"
   pullPolicy: Never
 service:
   type: ClusterIP
@@ -10,6 +10,8 @@ resources:
   requests:
     cpu: 100m
     memory: 32Mi
+    ephemeral-storage: 32Mi
   limits:
+    ephemeral-storage: 256Mi
     cpu: 500m
     memory: 256Mi
