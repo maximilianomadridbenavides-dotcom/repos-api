@@ -33,3 +33,7 @@ El acceso del navegador depende de que el equipo, Docker Desktop, Minikube y el 
 ## Pendiente para el cierre del reto
 
 Los sprints 1 a 6 están completados en su alcance de preparación, repositorios, CI, SonarCloud, Docker y despliegue local. Queda consolidar la entrega y preparar la defensa. Los hallazgos abiertos de SonarCloud y las advertencias de dependencias de desarrollo requieren revisión; la aprobación del Quality Gate no significa ausencia de hallazgos.
+
+## Alcance de la cobertura
+
+SonarCloud intentó exigir cobertura al script PowerShell de despliegue, mientras c8 genera LCOV para JavaScript. El script deploy-minikube.ps1 se excluye solamente de la métrica de cobertura: mantiene el análisis estático y se validó mediante despliegues reales. Todos los archivos JavaScript continúan incluidos y los mínimos de cobertura de la aplicación permanecen activos. No se modifica el Quality Gate.
