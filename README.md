@@ -47,3 +47,17 @@ Ejecuta `npm run test:coverage`. Se mide todo el JavaScript de la raíz con `c8 
 Las pruebas de frontend incluyen la página con DOM, filtros, actualización, respuestas inválidas, errores HTTP y de red, y el proxy del servidor local. Las pruebas de backend incluyen los endpoints y el arranque real en un puerto configurado. Los procesos de prueba se detienen de forma controlada para guardar cobertura también en Windows.
 
 SonarCloud importa LCOV. `sonar.qualitygate.wait=true` obliga a esperar su Quality Gate y falla el análisis si el resultado es rechazado. El mínimo global de cobertura se impone con c8 antes del análisis; este control es independiente de las condiciones del Quality Gate de SonarCloud.
+
+
+## Sprint 6: despliegue reproducible en Windows
+
+Con Docker Desktop funcionando en modo Linux, instala Minikube y Helm desde sus fuentes oficiales. Inicia una vez el clúster con `minikube start --driver=docker --cpus=2 --memory=3072 --profile=devops-reto`.
+
+Despliega primero el backend y después el frontend. Desde la raíz de cada repositorio ejecuta `./deploy-minikube.ps1`. El script requiere un clúster ya iniciado, construye la imagen dentro del perfil Minikube, comprueba Helm, instala con espera y reversión automática ante errores, y comprueba el despliegue. Se puede cambiar la etiqueta con `-ImageTag 1.1` para una nueva versión.
+
+El script del frontend comprueba que Nginx consulte la API a través del Service interno `repos-api:3000` y reciba los cinco repositorios. Los charts usan imágenes locales con `imagePullPolicy: Never`, límites de CPU y memoria, y comprobaciones de disponibilidad y salud.
+
+Para ver la aplicación deja activo `kubectl --context devops-reto -n reto port-forward svc/repos-front 8080:80` y abre `http://localhost:8080`. Para obtener evidencias usa `helm list --kube-context devops-reto -n reto` y `kubectl --context devops-reto -n reto get pods,svc`.
+
+Si aparece `ErrImageNeverPull`, comprueba el perfil y la etiqueta usada al construir. Si Nginx no encuentra la API, comprueba que el backend esté listo en el mismo namespace. Para investigar usa `kubectl --context devops-reto -n reto get events --sort-by=.lastTimestamp` y los logs del deployment correspondiente.
+
